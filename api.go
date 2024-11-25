@@ -10,23 +10,25 @@ import (
 
 type ApiServer struct {
 	listenAddr string
+	store      Storage
+}
+
+func NewApiServer(listenAddr string, store Storage) *ApiServer {
+	return &ApiServer{
+		listenAddr: listenAddr,
+		store:      store,
+	}
 }
 
 func (s *ApiServer) Run() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/account", makeHttpHandleFund(s.handleAccount))
-	router.HandleFunc("/account/{id}", makeHttpHandleFund(s.handleGetAccount))
+	router.HandleFunc("/account/{id}", makeHttpHandleFund(s.handleGetAccountById))
 
 	log.Println("API server running on ", s.listenAddr)
 
 	http.ListenAndServe(s.listenAddr, router)
-}
-
-func NewApiServer(listenAddr string) *ApiServer {
-	return &ApiServer{
-		listenAddr: listenAddr,
-	}
 }
 
 func (s *ApiServer) handleAccount(w http.ResponseWriter, r *http.Request) error {
@@ -43,6 +45,15 @@ func (s *ApiServer) handleAccount(w http.ResponseWriter, r *http.Request) error 
 }
 
 func (s *ApiServer) handleGetAccount(w http.ResponseWriter, r *http.Request) error {
+	accounts, err := s.store.GetAccounts()
+	if err != nil {
+		return err
+	}
+
+	return WriteJSON(w, http.StatusOK, accounts)
+}
+
+func (s *ApiServer) handleGetAccountById(w http.ResponseWriter, r *http.Request) error {
 	id := mux.Vars(r)["id"]
 
 	fmt.Println(id)
@@ -51,7 +62,17 @@ func (s *ApiServer) handleGetAccount(w http.ResponseWriter, r *http.Request) err
 }
 
 func (s *ApiServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	accountRequest := new(CreateAccountRequest)
+	if err := json.NewDecoder(r.Body).Decode(accountRequest); err != nil {
+		return err
+	}
+
+	account := NewAccount(accountRequest.FirstName, accountRequest.LastName)
+	if err := s.store.CreateAccount(account); err != nil {
+		return err
+	}
+
+	return WriteJSON(w, http.StatusOK, account)
 }
 
 func (s *ApiServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) error {
@@ -68,13 +89,13 @@ func WriteJSON(w http.ResponseWriter, status int, v any) error {
 	return json.NewEncoder(w).Encode(v)
 }
 
-type apiFund func(http.ResponseWriter, *http.Request) error
+type apiFunc func(http.ResponseWriter, *http.Request) error
 
 type ApiError struct {
 	Error string `json:"error"`
 }
 
-func makeHttpHandleFund(f apiFund) http.HandlerFunc {
+func makeHttpHandleFund(f apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(w, r); err != nil {
 			WriteJSON(w, http.StatusBadRequest, ApiError{err.Error()})
