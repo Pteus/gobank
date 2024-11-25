@@ -1,0 +1,4 @@
+### GET account
+GET localhost:3000/account
+
+###
