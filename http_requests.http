@@ -1,12 +1,5 @@
-### GET account
-GET localhost:3000/account
-
-###
-
 ### GET all accounts
 GET localhost:3000/account
-
-###
 
 ### POST create account
 POST localhost:3000/account
@@ -14,12 +7,13 @@ Content-Type: application/json
 
 {
   "firstName" : "Rita",
-  "lastName": "Correia"
+  "lastName": "Correia2"
 }
 
-###
-
 ### GET account by id
-GET localhost:3000/account/1
+GET localhost:3000/account/5
 
-###
+### DELETE account by id
+DELETE localhost:3000/account/5
+
+
