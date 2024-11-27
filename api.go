@@ -28,8 +28,9 @@ func (s *ApiServer) Run() {
 	router.HandleFunc("/account", makeHttpHandleFund(s.handleCreateAccount)).Methods("POST")
 	router.HandleFunc("/account/{id}", makeHttpHandleFund(s.handleGetAccountById)).Methods("GET")
 	router.HandleFunc("/account/{id}", makeHttpHandleFund(s.handleDeleteAccount)).Methods("DELETE")
+	router.HandleFunc("/transfer", makeHttpHandleFund(s.handleTransfer)).Methods("POST")
 
-	log.Println("API server running on ", s.listenAddr)
+	log.Println("Bank API server running on ", s.listenAddr)
 
 	http.ListenAndServe(s.listenAddr, router)
 }
@@ -83,7 +84,13 @@ func (s *ApiServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *ApiServer) handleTransfer(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	transferRequest := new(TransferRequest)
+	if err := json.NewDecoder(r.Body).Decode(transferRequest); err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	return WriteJSON(w, http.StatusOK, transferRequest)
 }
 
 func WriteJSON(w http.ResponseWriter, status int, v any) error {
