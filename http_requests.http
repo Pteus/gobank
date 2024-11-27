@@ -11,7 +11,9 @@ Content-Type: application/json
 }
 
 ### GET account by id
-GET localhost:3000/account/5
+GET localhost:3000/account/8
+x-jwt-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50TnVtYmVyIjo2ODU2MjksImV4cGlyZXNBdCI6MTUwMDB9.F17T3MZpS9I3KDSp0_Wh0WVFEB1iqBh7bQXB_hcM-yU
+
 
 ### DELETE account by id
 DELETE localhost:3000/account/5
